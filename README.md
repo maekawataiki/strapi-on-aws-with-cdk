@@ -1,6 +1,6 @@
 # Strapi on AWS with CDK
 
-This is a sample CDK project to deploy [Strapi](https://strapi.io/) on AWS using the [AWS Cloud Development Kit (CDK)](https://docs.aws.amazon.com/cdk/v2/guide/home.html) with best practices of AWS, CDK, and Strapi.
+This is a sample CDK project to deploy [Strapi](https://strapi.io/) on AWS using the [AWS Cloud Development Kit (CDK)](https://docs.aws.amazon.com/cdk/v2/guide/home.html) with best practices for AWS, CDK, and Strapi.
 
 It provides an easy way to set up a production-ready Strapi application on AWS with a serverless and highly available architecture, managed database, and secure access.
 
@@ -12,6 +12,8 @@ The architecture consists of the following components:
 
 - **Strapi Application**: The Strapi application is deployed as a Docker container on an Amazon Elastic Container Service (ECS) cluster using AWS Fargate, behind an Application Load Balancer (ALB).
 - **Amazon Aurora Serverless v2 (PostgreSQL)**: The application data is stored in an Amazon Aurora Serverless v2 (PostgreSQL) cluster, which provides a serverless, auto-scaling, and highly available relational database.
+- **Amazon S3**: The assets (e.g., images, files) are stored in Amazon S3.
+- **Amazon CloudFront**: The assets are cached and served through Amazon CloudFront, a global content delivery network (CDN).
 - **AWS Certificate Manager**: SSL/TLS certificates for secure communication are managed by AWS Certificate Manager.
 - **Amazon Route 53**: The application is accessible through a custom domain name managed by Amazon Route 53.
 - **AWS Secrets Manager**: Sensitive configuration values, such as database credentials, are securely stored in AWS Secrets Manager.
