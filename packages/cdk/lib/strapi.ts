@@ -71,6 +71,7 @@ class StrapiStack extends Stack {
       domainName,
       albDomainName,
       certificate: globalCertificate,
+      s3Bucket: ecsServiceStack.s3Bucket,
     });
 
     new Route53Record(this, Route53Record.name, {

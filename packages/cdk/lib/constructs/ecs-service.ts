@@ -14,7 +14,7 @@ import {
   ListenerCondition,
 } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { IHostedZone } from 'aws-cdk-lib/aws-route53';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { ISecret, Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
@@ -35,6 +35,7 @@ export interface ECSServiceProps {
 export class ECSService extends Construct {
   public readonly loadBalancer: IApplicationLoadBalancer;
   public readonly distribution: Distribution;
+  public readonly s3Bucket: Bucket;
 
   constructor(scope: Construct, id: string, props: ECSServiceProps) {
     super(scope, id);
@@ -63,7 +64,15 @@ export class ECSService extends Construct {
     });
 
     // S3 Bucket
-    const s3Bucket = new Bucket(this, 'StrapiBucket');
+    const s3Bucket = new Bucket(this, 'StrapiBucket', {
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      blockPublicAccess: new BlockPublicAccess({
+        blockPublicPolicy: true,
+        blockPublicAcls: false,
+        restrictPublicBuckets: true,
+        ignorePublicAcls: false,
+      }),
+    });
 
     // Create Docker Image Asset
     const dockerImageAsset = new DockerImageAsset(this, 'DockerImageAsset', {
@@ -99,8 +108,8 @@ export class ECSService extends Construct {
             PORT: '1337',
             // S3 Plugin
             AWS_BUCKET: s3Bucket.bucketName,
-            CDN_URL: domainName,
-            CDN_ROOT_PATH: '',
+            CDN_URL: `https://${domainName}`,
+            CDN_ROOT_PATH: 'uploads',
           },
         },
         domainName: albDomainName,
@@ -110,10 +119,12 @@ export class ECSService extends Construct {
     );
     strapiSecret.grantRead(loadBalancedService.taskDefinition.taskRole);
     s3Bucket.grantReadWrite(loadBalancedService.taskDefinition.taskRole);
+    s3Bucket.grantPutAcl(loadBalancedService.taskDefinition.taskRole);
 
     this.restricAccessToAdmin(loadBalancedService, authorizedIPsForAdminAccess);
 
     this.loadBalancer = loadBalancedService.loadBalancer;
+    this.s3Bucket = s3Bucket;
   }
 
   private getSecretsDefinition(dbSecret: ISecret, strapiSecret: ISecret) {

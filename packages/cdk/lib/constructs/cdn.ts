@@ -8,8 +8,9 @@ import {
   PriceClass,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
-import { HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { HttpOrigin, S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { IApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 export interface CDNProps {
@@ -17,6 +18,7 @@ export interface CDNProps {
   certificate: ICertificate;
   domainName: string;
   albDomainName: string;
+  s3Bucket: Bucket;
 }
 
 export class CDN extends Construct {
@@ -47,6 +49,12 @@ export class CDN extends Construct {
       cachePolicy: CachePolicy.CACHING_DISABLED,
       allowedMethods: AllowedMethods.ALLOW_ALL,
       originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
+    });
+    distribution.addBehavior('/uploads/*', new S3Origin(props.s3Bucket), {
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+      allowedMethods: AllowedMethods.ALLOW_ALL,
+      originRequestPolicy: OriginRequestPolicy.CORS_S3_ORIGIN,
     });
 
     this.distribution = distribution;
